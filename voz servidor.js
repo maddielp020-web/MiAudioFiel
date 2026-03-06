@@ -1,7 +1,7 @@
 // ==================== IMPORTACIONES ====================
 import express from 'express';
 import cors from 'cors';
-import edgeTTS from 'edge-tts-universal'; // CORREGIDO: importación default
+import * as edgeTTS from 'edge-tts-universal'; // CORREGIDO: importación default
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,7 +68,7 @@ let ttsInstance = null;
 
 async function getTTS() {
   if (!ttsInstance) {
-    ttsInstance = await edgeTTS.createTTS(); // CORREGIDO: uso de edgeTTS.createTTS()
+    ttsInstance = await edgeTTS.default.createTTS(); // CORREGIDO: uso de edgeTTS.createTTS()
   }
   return ttsInstance;
 }
