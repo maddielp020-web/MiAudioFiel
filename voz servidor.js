@@ -1,6 +1,5 @@
-// ==================== MiAudioFiel TTS Backend v2.0.3 ====================
-// Backend completo TTS con Edge TTS Universal - Marzo 2026
-// Desplegable en Render FREE - Listo para producción
+// ==================== MiAudioFiel TTS Backend v2.0.4 ====================
+// FIX: rate='0%' → rate=0 (formato correcto EdgeTTS 2026)
 
 import express from 'express';
 import cors from 'cors';
@@ -9,168 +8,118 @@ import { UniversalEdgeTTS } from 'edge-tts-universal';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== CONFIGURACIÓN NEGOCIO ====================
+// ==================== CONFIGURACIÓN ====================
 const LIMITES = {
-  gratis: 2500,  // caracteres por texto
+  gratis: 2500,
   pro: 10000,
   dueño: Infinity
 };
 
 const VOCES_DISPONIBLES = [
-  // ESPAÑOL
-  'es-ES-ElviraNeural',
-  'es-ES-AlvaroNeural', 
-  'es-MX-PaulinaNeural',
-  'es-ES-CarlosNeural',
-  
-  // INGLÉS
-  'en-US-AriaNeural',
-  'en-US-GuyNeural',
-  
-  // RUSO
-  'ru-RU-SvetlanaNeural',
-  'ru-RU-DmitryNeural'
+  'es-ES-ElviraNeural', 'es-ES-AlvaroNeural', 'es-MX-PaulinaNeural',
+  'en-US-AriaNeural', 'en-US-GuyNeural', 
+  'ru-RU-SvetlanaNeural', 'ru-RU-DmitryNeural'
 ];
 
-const VOCES_POR_DEFECTO = {
+const VOCES_DEFECTO = {
   'es': 'es-ES-ElviraNeural',
   'en': 'en-US-AriaNeural', 
   'ru': 'ru-RU-SvetlanaNeural'
 };
 
-const TOKENS_ESPECIALES = {
-  'token_dueño_123': 'dueño'  // Cambia esto por tu token real
+const TOKENS = {
+  'token_dueño_123': 'dueño'
 };
 
-function getTipoUsuario(token) {
-  if (!token) return 'gratis';
-  return TOKENS_ESPECIALES[token] || 'gratis';
+function getUsuario(token) {
+  return TOKENS[token] || (!token ? 'gratis' : 'gratis');
 }
 
 function getIP(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-         req.socket?.remoteAddress || 'desconocida';
+  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
 }
 
 // ==================== MIDDLEWARE ====================
-app.use(cors({
-  origin: '*',  // Ajusta después para producción
-  methods: ['POST', 'GET']
-}));
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// ==================== ENDPOINT PRINCIPAL /tts ====================
+// ==================== ENDPOINT /tts ====================
 app.post('/tts', async (req, res) => {
   const inicio = Date.now();
   
   try {
     const { text, lang = 'es', voice, token } = req.body;
     
-    // 1. VALIDAR TEXTO
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    // VALIDACIÓN BÁSICA
+    if (!text?.trim()) {
+      return res.status(400).json({ error: 'Texto requerido' });
+    }
+    
+    const texto = text.trim();
+    const chars = texto.length;
+    const usuario = getUsuario(token);
+    const maxChars = LIMITES[usuario];
+    
+    if (chars > maxChars) {
       return res.status(400).json({ 
-        error: 'Texto requerido',
-        max_chars_gratis: LIMITES.gratis 
+        error: `Límite ${usuario}: ${maxChars} chars`,
+        actual: chars 
       });
     }
     
-    const textoLimpio = text.trim();
-    const chars = textoLimpio.length;
-    
-    // 2. TIPO DE USUARIO Y LÍMITE
-    const tipoUsuario = getTipoUsuario(token);
-    const limiteMax = LIMITES[tipoUsuario];
-    
-    if (chars > limiteMax) {
-      return res.status(400).json({
-        error: `Límite excedido (${tipoUsuario})`,
-        max_permitido: limiteMax,
-        tiene: chars
-      });
-    }
-    
-    // 3. SELECCIONAR VOZ
-    let vozFinal = voice;
-    
-    if (!vozFinal) {
-      const idioma = lang.toLowerCase().substring(0, 2);
-      vozFinal = VOCES_POR_DEFECTO[idioma] || 'es-ES-ElviraNeural';
-    }
-    
-    if (!VOCES_DISPONIBLES.includes(vozFinal)) {
-      return res.status(400).json({
-        error: 'Voz inválida',
-        voces_disponibles: VOCES_DISPONIBLES.slice(0, 4)  // Solo primeras 4
-      });
+    // VOZ
+    let voz = voice || VOCES_DEFECTO[lang.slice(0,2)] || 'es-ES-ElviraNeural';
+    if (!VOCES_DISPONIBLES.includes(voz)) {
+      voz = 'es-ES-ElviraNeural';
     }
     
     const ip = getIP(req);
-    console.log(`🎙️ [${ip}] ${tipoUsuario} | ${chars} chars | ${vozFinal}`);
+    console.log(`🎙️ [${ip}] ${usuario} | ${chars}c | ${voz}`);
     
-    // 4. EDGE TTS CORRECTO (API oficial 2026)
-    const tts = new UniversalEdgeTTS(textoLimpio, vozFinal, {
-      rate: '0%',           // Velocidad normal
-      pitch: '+0Hz',        // Tono normal
-      volume: '0%',         // Volumen normal
-      voice: vozFinal
+    // ========== EDGE TTS CORREGIDO ==========
+    const tts = new UniversalEdgeTTS(texto, voz, {
+      rate: 0,           // ✅ FIX: NUMERO, no string '0%'
+      pitch: 0,          // ✅ NUMERO
+      volume: 0          // ✅ NUMERO
     });
     
     const resultado = await tts.synthesize();
-    const audioBuffer = Buffer.from(await resultado.audio.arrayBuffer());
+    const buffer = Buffer.from(await resultado.audio.arrayBuffer());
     
-    const tiempoTotal = Date.now() - inicio;
-    console.log(`✅ [${ip}] OK | ${audioBuffer.length} bytes | ${tiempoTotal}ms`);
+    const tiempo = Date.now() - inicio;
+    console.log(`✅ [${ip}] OK | ${buffer.length}B | ${tiempo}ms`);
     
-    // 5. RESPUESTA CON AUDIO
+    // RESPUESTA
     res.set({
       'Content-Type': 'audio/mpeg',
-      'Content-Disposition': 'inline; filename="audiofiel.mp3"',
-      'Content-Length': audioBuffer.length,
-      'Cache-Control': 'public, max-age=3600'
+      'Content-Disposition': 'inline; filename="audio.mp3"',
+      'Content-Length': buffer.length
     });
+    res.send(buffer);
     
-    res.send(audioBuffer);
-    
-  } catch (error) {
+  } catch (err) {
     const ip = getIP(req);
-    const tiempoTotal = Date.now() - inicio;
-    
-    console.error(`❌ [${ip}] ERROR (${tiempoTotal}ms):`, error.message);
+    const tiempo = Date.now() - inicio;
+    console.error(`❌ [${ip}] ${err.message} (${tiempo}ms)`);
     
     res.status(500).json({
-      error: 'Error TTS',
-      detalles: error.message?.substring(0, 100),
-      codigo: 'TTS_500'
+      error: 'TTS falló',
+      detalles: err.message
     });
   }
 });
 
-// ==================== ENDPOINTS AUXILIARES ====================
-app.get('/', (req, res) => {
-  res.json({
-    nombre: 'MiAudioFiel TTS',
-    version: '2.0.3-FINAL',
-    estado: '🟢 FUNCIONANDO',
-    endpoints: ['POST /tts', 'GET /voces']
-  });
-});
+// ==================== INFO ====================
+app.get('/', (req, res) => res.json({ 
+  ok: true, 
+  version: '2.0.4-FIXED',
+  voces: VOCES_DISPONIBLES.length 
+}));
 
-app.get('/voces', (req, res) => {
-  res.json({
-    total: VOCES_DISPONIBLES.length,
-    premium: VOCES_DISPONIBLES,
-    por_defecto: {
-      es: 'es-ES-ElviraNeural',
-      en: 'en-US-AriaNeural',
-      ru: 'ru-RU-SvetlanaNeural'
-    }
-  });
-});
+app.get('/voces', (req, res) => res.json(VOCES_DISPONIBLES));
 
-// ==================== INICIO SERVIDOR ====================
 app.listen(PORT, () => {
-  console.log('🚀 MiAudioFiel TTS v2.0.3');
-  console.log('📡 http://localhost:' + PORT);
-  console.log('✅ EdgeTTS Universal - Listo');
-  console.log('🟢 GET / | POST /tts | GET /voces');
+  console.log('🚀 MiAudioFiel TTS v2.0.4');
+  console.log(`📡 Puerto ${PORT}`);
+  console.log('✅ FIX: rate=0 (número)');
 });
