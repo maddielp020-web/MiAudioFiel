@@ -1,25 +1,11 @@
 {
-  "name": "miaudiofiel-backend",
-  "version": "2.0.0",
+  "name": "miaudiofiel",
+  "version": "2.0.4",
   "type": "module",
-  "description": "Backend TTS con Edge TTS (voces neurales gratuitas) para MiAudioFiel",
-  "main": "voz servidor.js",
-  "scripts": {
-    "start": "node voz servidor.js",
-    "dev": "nodemon voz servidor.js"
-  },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "edge-tts-universal": "^1.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": ["tts", "edge-tts", "microsoft", "neural", "voices", "telegram", "render"],
-  "author": "MiAudioFiel",
-  "license": "MIT"
+    "express": "^4.19.2",
+    "cors": "^2.8.5", 
+    "edge-tts-universal": "^1.4.0"
+  }
 }
