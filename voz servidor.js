@@ -68,7 +68,7 @@ let ttsInstance = null;
 
 async function getTTS() {
   if (!ttsInstance) {
-    ttsInstance = await edgeTTS.default.createTTS(); // CORREGIDO: uso de edgeTTS.createTTS()
+    ttsInstance = await edgeTTS.createTTS(); // CORREGIDO: uso de edgeTTS.createTTS()
   }
   return ttsInstance;
 }
