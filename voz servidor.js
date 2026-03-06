@@ -1,7 +1,7 @@
 // ==================== IMPORTACIONES ====================
 import express from 'express';
 import cors from 'cors';
-import * as edgeTTS from 'edge-tts-universal'; // CORREGIDO: importación default
+import edgeTTS from 'edge-tts-universal'; // ✅ CORRECTO - Importación default
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,23 +10,22 @@ const PORT = process.env.PORT || 3000;
 // Voces neurales de Microsoft - Marzo 2026
 const VOCES_PREMIUM = {
   // ESPAÑOL (4 voces)
-  'es-ES-ElviraNeural': 'es-ES-ElviraNeural',   // España, muy natural
-  'es-MX-PaulinaNeural': 'es-MX-PaulinaNeural',  // México, neutra
-  'es-ES-AlvaroNeural': 'es-ES-AlvaroNeural',   // España, profesional
-  'es-ES-CarlosNeural': 'es-ES-CarlosNeural',   // España, formal
+  'es-ES-ElviraNeural': 'es-ES-ElviraNeural',
+  'es-MX-PaulinaNeural': 'es-MX-PaulinaNeural',
+  'es-ES-AlvaroNeural': 'es-ES-AlvaroNeural',
+  'es-ES-CarlosNeural': 'es-ES-CarlosNeural',
 
   // INGLÉS (2 voces)
-  'en-US-AriaNeural': 'en-US-AriaNeural',        // Mejor voz femenina inglés
-  'en-US-GuyNeural': 'en-US-GuyNeural',         // Mejor voz masculina inglés
+  'en-US-AriaNeural': 'en-US-AriaNeural',
+  'en-US-GuyNeural': 'en-US-GuyNeural',
 
   // RUSO (2 voces)
-  'ru-RU-SvetlanaNeural': 'ru-RU-SvetlanaNeural', // Mejor voz femenina ruso
-  'ru-RU-DmitryNeural': 'ru-RU-DmitryNeural'     // Mejor voz masculina ruso
+  'ru-RU-SvetlanaNeural': 'ru-RU-SvetlanaNeural',
+  'ru-RU-DmitryNeural': 'ru-RU-DmitryNeural'
 };
 
 const VOCES_VALIDAS = Object.values(VOCES_PREMIUM);
 
-// Mapa de voz por defecto según idioma (campo 'lang')
 const DEFAULT_VOICE_BY_LANG = {
   'es-ES': 'es-ES-ElviraNeural',
   'es-MX': 'es-MX-PaulinaNeural',
@@ -36,26 +35,21 @@ const DEFAULT_VOICE_BY_LANG = {
 
 // ==================== CONFIGURACIÓN DE USUARIOS Y LÍMITES ====================
 const LIMITES_POR_TEXTO = {
-  gratis: 3000,      // 3000 caracteres por texto
-  pro: 8000,         // 8000 caracteres por texto
-  dueño: Infinity    // Ilimitado para token especial
+  gratis: 3000,
+  pro: 8000,
+  dueño: Infinity
 };
 
-// INTERRUPTOR PARA LÍMITES DIARIOS (APAGADO POR DEFECTO)
 const LIMITES_DIARIOS_ACTIVADOS = false;
-const LIMITE_DIARIO_GRATIS = 30000; // 30,000 caracteres/día (cuando se active)
+const LIMITE_DIARIO_GRATIS = 30000;
 
-// MAPEO DE TOKENS (ejemplo inicial)
 const TOKENS_ESPECIALES = {
   'token_del_dueño_123': 'dueño'
-  // Aquí se irán añadiendo tokens PRO cuando haya pagos
 };
 
 function obtenerTipoUsuario(token) {
   if (!token) return 'gratis';
   if (TOKENS_ESPECIALES[token] === 'dueño') return 'dueño';
-  // Por ahora, cualquier token que no sea dueño es gratis
-  // En futuro: consultar DB para ver si es PRO
   return 'gratis';
 }
 
@@ -63,67 +57,44 @@ function obtenerTipoUsuario(token) {
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// ==================== INSTANCIA TTS (SINGLETON) ====================
-let ttsInstance = null;
-
-async function getTTS() {
-  if (!ttsInstance) {
-    ttsInstance = await edgeTTS.createTTS(); // CORREGIDO: uso de edgeTTS.createTTS()
-  }
-  return ttsInstance;
-}
-
 // ==================== ENDPOINT PRINCIPAL /tts ====================
 app.post('/tts', async (req, res) => {
   const startTime = Date.now();
   let logData = {};
 
   try {
-    // 1. Extraer datos de la petición
     const { text, lang, voice, token } = req.body;
 
-    // 2. Validar texto
+    // Validar texto
     if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'El campo "text" es obligatorio y debe ser texto' });
+      return res.status(400).json({ error: 'El campo "text" es obligatorio' });
     }
 
-    // 3. Determinar tipo de usuario
+    // Validar tipo de usuario y límites
     const tipoUsuario = obtenerTipoUsuario(token);
     const limiteTexto = LIMITES_POR_TEXTO[tipoUsuario];
 
-    // 4. Validar longitud del texto
     if (text.length > limiteTexto) {
       return res.status(400).json({
-        error: `Límite de caracteres excedido. Tu plan permite ${limiteTexto} caracteres por texto.`
+        error: `Límite excedido. Tu plan permite ${limiteTexto} caracteres`
       });
     }
 
-    // 5. Validar voz (si se proporciona)
+    // Validar/Seleccionar voz
     let vozSeleccionada = voice;
     if (vozSeleccionada) {
       if (!VOCES_VALIDAS.includes(vozSeleccionada)) {
-        return res.status(400).json({
-          error: 'Voz no soportada. Consulta /voces para ver las disponibles.'
-        });
+        return res.status(400).json({ error: 'Voz no soportada' });
       }
     } else {
-      // Si no se proporciona voz, usar la predeterminada según lang
       const langKey = lang || 'es-ES';
       vozSeleccionada = DEFAULT_VOICE_BY_LANG[langKey] || 'es-ES-ElviraNeural';
     }
 
-    // 6. (Opcional) Límites diarios - solo si el interruptor está activado
-    if (LIMITES_DIARIOS_ACTIVADOS && tipoUsuario === 'gratis') {
-      // Aquí se implementaría la lógica de contador diario (ej. usando Redis o memoria)
-      // Por ahora, solo un placeholder
-      // En el futuro se puede añadir un almacenamiento simple
-    }
+    // ✅ SOLUCIÓN: LLAMADA DIRECTA A LA LIBRERÍA
+    const audioBuffer = await edgeTTS.tts(text, vozSeleccionada);
 
-    // 7. Generar audio con Edge TTS
-    const tts = await getTTS();
-    const audioBuffer = await tts.tts(text, vozSeleccionada);
-
-    // 8. Registrar log exitoso
+    // Log exitoso
     logData = {
       timestamp: new Date().toISOString(),
       ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
@@ -137,7 +108,7 @@ app.post('/tts', async (req, res) => {
     };
     console.log(JSON.stringify(logData));
 
-    // 9. Enviar respuesta con audio
+    // Enviar audio
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Disposition': 'inline; filename="audio.mp3"',
@@ -163,48 +134,26 @@ app.post('/tts', async (req, res) => {
   }
 });
 
-// ==================== ENDPOINT DE INFORMACIÓN ====================
+// ==================== ENDPOINTS DE INFORMACIÓN ====================
 app.get('/', (req, res) => {
   res.json({
     nombre: 'MiAudioFiel',
-    version: '2.0.0',
-    descripcion: 'Backend de texto a voz con voces neurales gratuitas (Edge TTS)',
+    version: '2.0.1', // Versión corregida
+    descripcion: 'Backend TTS con Edge TTS',
     endpoints: {
-      tts: {
-        metodo: 'POST',
-        ruta: '/tts',
-        body: {
-          text: 'string (obligatorio)',
-          lang: 'string (opcional, ej: es-ES)',
-          voice: 'string (opcional, una de las voces listadas en /voces)',
-          token: 'string (opcional, token de usuario)'
-        }
-      },
-      voces: {
-        metodo: 'GET',
-        ruta: '/voces'
-      }
-    },
-    limites: {
-      gratis: LIMITES_POR_TEXTO.gratis + ' caracteres por texto',
-      pro: LIMITES_POR_TEXTO.pro + ' caracteres por texto',
-      dueño: 'Ilimitado'
-    },
-    interruptorLimitesDiarios: LIMITES_DIARIOS_ACTIVADOS ? 'ACTIVADO' : 'DESACTIVADO'
+      tts: 'POST /tts',
+      voces: 'GET /voces'
+    }
   });
 });
 
-// ==================== ENDPOINT DE LISTA DE VOCES ====================
 app.get('/voces', (req, res) => {
   const listaVoces = Object.keys(VOCES_PREMIUM).map(nombreComun => ({
     id: VOCES_PREMIUM[nombreComun],
     descripcion: obtenerDescripcionVoz(nombreComun)
   }));
 
-  res.json({
-    total: listaVoces.length,
-    voces: listaVoces
-  });
+  res.json({ total: listaVoces.length, voces: listaVoces });
 });
 
 function obtenerDescripcionVoz(nombre) {
@@ -213,27 +162,21 @@ function obtenerDescripcionVoz(nombre) {
     'es-MX-PaulinaNeural': 'Español (México) - Mujer, neutra',
     'es-ES-AlvaroNeural': 'Español (España) - Hombre, profesional',
     'es-ES-CarlosNeural': 'Español (España) - Hombre, formal',
-    'en-US-AriaNeural': 'Inglés (EE.UU.) - Mujer, mejor voz femenina',
-    'en-US-GuyNeural': 'Inglés (EE.UU.) - Hombre, mejor voz masculina',
-    'ru-RU-SvetlanaNeural': 'Ruso (Rusia) - Mujer, mejor voz femenina',
-    'ru-RU-DmitryNeural': 'Ruso (Rusia) - Hombre, mejor voz masculina'
+    'en-US-AriaNeural': 'Inglés (EE.UU.) - Mujer',
+    'en-US-GuyNeural': 'Inglés (EE.UU.) - Hombre',
+    'ru-RU-SvetlanaNeural': 'Ruso (Rusia) - Mujer',
+    'ru-RU-DmitryNeural': 'Ruso (Rusia) - Hombre'
   };
-  return descripciones[nombre] || 'Voz neural de alta calidad';
+  return descripciones[nombre] || 'Voz neural';
 }
 
 // ==================== INICIO DEL SERVIDOR ====================
 app.listen(PORT, () => {
   console.log('==========================================');
-  console.log('🚀 MiAudioFiel - Backend TTS con Edge TTS');
+  console.log('🚀 MiAudioFiel - VERSIÓN CORREGIDA 2.0.1');
   console.log('==========================================');
+  console.log(`✅ Error createTTS ELIMINADO`);
+  console.log(`✅ Llamada directa a edgeTTS.tts()`);
   console.log(`📡 Puerto: ${PORT}`);
-  console.log(`🌐 http://localhost:${PORT}`);
-  console.log(`✅ Endpoints:`);
-  console.log(`   - POST /tts`);
-  console.log(`   - GET  /`);
-  console.log(`   - GET  /voces`);
-  console.log(`✅ Voces premium: 8`);
-  console.log(`✅ Límite gratis: ${LIMITES_POR_TEXTO.gratis} caracteres/texto`);
-  console.log(`✅ Límites diarios: ${LIMITES_DIARIOS_ACTIVADOS ? 'ACTIVADOS' : 'DESACTIVADOS'}`);
   console.log('==========================================');
 });
