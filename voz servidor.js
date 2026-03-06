@@ -1,11 +1,10 @@
-// ==================== IMPORTACIONES ====================
+// ==================== IMPORTACIONES CORREGIDAS ====================
 import express from 'express';
 import cors from 'cors';
-import edgeTTS from 'edge-tts-universal'; // ✅ CORRECTO - Importación default
+import * as edgeTTS from 'edge-tts-universal'; // ✅ CORREGIDO: importación con *
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 // ==================== CONFIGURACIÓN DE VOCES PREMIUM ====================
 // Voces neurales de Microsoft - Marzo 2026
 const VOCES_PREMIUM = {
