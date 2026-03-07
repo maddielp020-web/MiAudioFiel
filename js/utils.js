@@ -51,7 +51,7 @@ export function updatePlanBadge(plan, charsUsed, dailyLimit, badgeElement) {
  */
 export function saveToken(token) {
   if (token) {
-    localStorage.setItem('miaudio_token', token);
+    localStorage.setItem('miaudiofiel_token', token); // ✅ MISMO NOMBRE QUE ANTES
   }
 }
 
@@ -60,7 +60,7 @@ export function saveToken(token) {
  * @returns {string|null}
  */
 export function getToken() {
-  return localStorage.getItem('miaudio_token');
+  return localStorage.getItem('miaudiofiel_token'); // ✅ MISMO NOMBRE
 }
 
 /**
