@@ -2,7 +2,7 @@
 import { getToken } from './utils.js';
 
 // Configuración del backend (cambiar por tu URL de Render)
-const BACKEND_URL = 'https://miaudiofiel-backend.onrender.com'; // ACTUALIZAR
+const BACKEND_URL = 'https://miaudiofiel.onrender.com'; // ✅ URL CORRECTA
 
 /**
  * Genera audio usando el backend Edge TTS
@@ -17,9 +17,8 @@ export async function generarAudio(text, voice, speed = '0', token = null) {
 
   // Mapear velocidad a número (el backend espera un float, ej. 1.0, 0.8, 1.2)
   let speedValue = 1.0;
-  if (speed === '-20%') speedValue = 0.8;
-  if (speed === '20%') speedValue = 1.2;
-
+if (speed === '-20%') speedValue = 0.8;  // Lento
+if (speed === '20%') speedValue = 1.2;   // Rápido
   const payload = {
     text,
     voice,
