@@ -1,0 +1,16 @@
+/* ================= MODOS DE FUNCIONAMIENTO ================= */
+/* Este archivo está reservado para estilos específicos de:
+   - Modo Rápido (voz local)
+   - Modo Profesional (Edge TTS)
+   
+   Por ahora está vacío. Se implementará en fases futuras.
+*/
+
+/* Placeholder para futuros estilos */
+.modo-rapido-activo .algun-elemento {
+  /* estilos cuando el modo rápido esté activo */
+}
+
+.modo-pro-activo .algun-elemento {
+  /* estilos cuando el modo pro esté activo */
+}
