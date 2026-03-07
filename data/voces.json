@@ -1,0 +1,60 @@
+{
+  "voces": [
+    {
+      "id": "es-ES-ElviraNeural",
+      "nombre": "Elvira",
+      "pais": "España",
+      "genero": "Mujer",
+      "descripcion": "Muy natural, ideal para narraciones",
+      "bandera": "🇪🇸"
+    },
+    {
+      "id": "es-ES-AlvaroNeural",
+      "nombre": "Álvaro",
+      "pais": "España",
+      "genero": "Hombre",
+      "descripcion": "Profesional, para presentaciones",
+      "bandera": "🇪🇸"
+    },
+    {
+      "id": "es-MX-PaulinaNeural",
+      "nombre": "Paulina",
+      "pais": "México",
+      "genero": "Mujer",
+      "descripcion": "Neutra, clara",
+      "bandera": "🇲🇽"
+    },
+    {
+      "id": "en-US-AriaNeural",
+      "nombre": "Aria",
+      "pais": "Estados Unidos",
+      "genero": "Mujer",
+      "descripcion": "Mejor voz femenina inglés",
+      "bandera": "🇺🇸"
+    },
+    {
+      "id": "en-US-GuyNeural",
+      "nombre": "Guy",
+      "pais": "Estados Unidos",
+      "genero": "Hombre",
+      "descripcion": "Mejor voz masculina inglés",
+      "bandera": "🇺🇸"
+    },
+    {
+      "id": "ru-RU-SvetlanaNeural",
+      "nombre": "Svetlana",
+      "pais": "Rusia",
+      "genero": "Mujer",
+      "descripcion": "Voz femenina más popular",
+      "bandera": "🇷🇺"
+    },
+    {
+      "id": "ru-RU-DmitryNeural",
+      "nombre": "Dmitry",
+      "pais": "Rusia",
+      "genero": "Hombre",
+      "descripcion": "Voz masculina clara",
+      "bandera": "🇷🇺"
+    }
+  ]
+}
