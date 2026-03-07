@@ -40,7 +40,7 @@ function init() {
   upgradeBtn.addEventListener('click', handleUpgrade);
   downloadBtn.addEventListener('click', handleDownload);
   
-  // ✅ NUEVA LÍNEA
+  // Deshabilitar download al inicio
   downloadBtn.disabled = true;
   
   if (userToken) {
@@ -51,6 +51,132 @@ function init() {
   console.log('✅ App lista');
 }
 
+// ==================== FUNCIONES QUE FALTABAN ====================
+
+function handleTextInput(e) {
+  const count = e.target.value.length;
+  document.getElementById('charCount').textContent = count;
+  console.log('📝 Caracteres:', count);
+}
+
+async function handlePlay() {
+  console.log('🟢 Botón PLAY presionado');
+  
+  const text = textInput.value.trim();
+  
+  if (!text) {
+    updateStatus('❌ Escribe algo primero', 'error');
+    return;
+  }
+
+  const charCount = text.length;
+  if (charCount > DAILY_LIMIT && !userToken) {
+    updateStatus(`❌ Límite diario (${formatNumber(DAILY_LIMIT)} caracteres). Usa token PRO.`, 'error');
+    return;
+  }
+
+  const voice = voiceSelect.value;
+  let speed = '0';
+  speedRadios.forEach(radio => {
+    if (radio.checked) speed = radio.value;
+  });
+
+  updateStatus('⏳ Generando audio premium...', 'loading');
+  playBtn.disabled = true;
+
+  try {
+    console.log('📡 Enviando petición al backend...');
+    const { generarAudio } = await import('./modo-pro.js');
+    const audioBlob = await generarAudio(text, voice, speed, userToken);
+    
+    if (!audioBlob || audioBlob.size === 0) {
+      throw new Error('Audio vacío');
+    }
+    
+    const audioUrl = URL.createObjectURL(audioBlob);
+    audioPlayerEl.src = audioUrl;
+    audioPlayerCard.style.display = 'block';
+    currentAudioBlob = audioBlob;
+    downloadBtn.disabled = false;
+    
+    updateStatus('✅ Audio listo. Puedes reproducir o descargar.', 'success');
+  } catch (error) {
+    console.error('❌ Error completo:', error);
+    
+    if (!navigator.onLine) {
+      updateStatus('❌ Sin conexión a internet', 'error');
+    } else {
+      updateStatus(`❌ Error: ${error.message}`, 'error');
+    }
+  } finally {
+    playBtn.disabled = false;
+    console.log('🔓 Botón re-habilitado');
+  }
+}
+
+function handleToken() {
+  console.log('🔑 Botón TOKEN presionado');
+  
+  const token = prompt('Ingresa tu token PRO o de dueño:');
+  if (token && token.trim() !== '') {
+    saveToken(token.trim());
+    userToken = token.trim();
+    updateStatus('✅ Token guardado. Acceso premium activado.', 'success');
+    console.log('✅ Token guardado:', token);
+  } else {
+    updateStatus('❌ Token inválido o vacío', 'error');
+    console.log('❌ Token inválido');
+  }
+}
+
+function handleUpgrade() {
+  console.log('💎 Botón IR PRO presionado');
+  window.open('https://t.me/miaudiofiel_bot', '_blank');
+}
+
+function handleDownload() {
+  console.log('💾 Botón DESCARGAR presionado');
+  
+  if (!currentAudioBlob) {
+    console.log('❌ No hay audio para descargar');
+    return;
+  }
+  
+  const url = URL.createObjectURL(currentAudioBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `MiAudioFiel-${Date.now()}.mp3`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  console.log('✅ Descarga iniciada');
+}
+
+// ==================== UI HELPERS ====================
+function updateStatus(message, type = 'info') {
+  if (!statusDiv) return;
+  
+  statusDiv.innerHTML = `<i class="fas ${getIcon(type)}"></i> ${message}`;
+  statusDiv.className = 'status-liquid';
+  if (type === 'loading') {
+    statusDiv.classList.add('status-playing');
+  } else {
+    statusDiv.classList.remove('status-playing');
+  }
+  
+  console.log(`[${type.toUpperCase()}] ${message}`);
+}
+
+function getIcon(type) {
+  switch(type) {
+    case 'error': return 'fa-exclamation-circle';
+    case 'success': return 'fa-check-circle';
+    case 'loading': return 'fa-circle-notch fa-spin';
+    default: return 'fa-info-circle';
+  }
+}
 // ==================== MANEJADORES ====================
 
 function handleTextInput(e) {
