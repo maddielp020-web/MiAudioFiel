@@ -30,21 +30,21 @@ let userToken = getToken(); // Recuperar token guardado
 function init() {
   console.log('🚀 Iniciando MiAudioFiel...');
   
-  // Establecer límite en el badge
   if (charLimitSpan) {
     charLimitSpan.textContent = `${formatNumber(DAILY_LIMIT)} / día`;
   }
   
-  // Event listeners
   textInput.addEventListener('input', handleTextInput);
   playBtn.addEventListener('click', handlePlay);
   tokenBtn.addEventListener('click', handleToken);
   upgradeBtn.addEventListener('click', handleUpgrade);
   downloadBtn.addEventListener('click', handleDownload);
   
-  // Verificar token inicial
+  // ✅ NUEVA LÍNEA
+  downloadBtn.disabled = true;
+  
   if (userToken) {
-    console.log('🔑 Token encontrado en localStorage');
+    console.log('🔑 Token encontrado');
     updateStatus('Token PRO cargado', 'info');
   }
   
@@ -58,12 +58,16 @@ function handleTextInput(e) {
   // Aquí podrías deshabilitar el botón si excede el límite, etc.
 }
 
-async function handlePlay() {
-  const text = textInput.value.trim();
-  if (!text) {
-    updateStatus('❌ Escribe algo primero', 'error');
-    return;
+} catch (error) {
+  if (!navigator.onLine) {
+    updateStatus('❌ Sin conexión a internet', 'error');
+  } else {
+    updateStatus(`❌ Error: ${error.message}`, 'error');
   }
+  console.error(error);
+} finally {
+  playBtn.disabled = false;
+}
 
   const charCount = text.length;
   if (charCount > DAILY_LIMIT && !userToken) {
@@ -102,14 +106,13 @@ async function handlePlay() {
 }
 
 function handleToken() {
-  // En iPhone, prompt es funcional
   const token = prompt('Ingresa tu token PRO o de dueño:');
-  if (token) {
-    saveToken(token);
-    userToken = token;
-    updateStatus('✅ Token guardado. Ahora tienes acceso premium.', 'success');
+  if (token && token.trim() !== '') {
+    saveToken(token.trim());
+    userToken = token.trim();
+    updateStatus('✅ Token guardado. Acceso premium activado.', 'success');
   } else {
-    updateStatus('❌ No se ingresó token', 'error');
+    updateStatus('❌ Token inválido o vacío', 'error');
   }
 }
 
