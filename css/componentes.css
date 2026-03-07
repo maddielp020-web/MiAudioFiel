@@ -1,0 +1,244 @@
+/* ================= LIQUID GLASS CARDS ================= */
+@import 'colores.css';
+
+.liquid-card {
+  background: var(--fondo-card);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--vidrio-borde);
+  border-radius: 28px;
+  padding: 32px 24px;
+  margin-bottom: 24px;
+  box-shadow: 
+    var(--vidrio-sombra),
+    inset 0 1px 0 var(--vidrio-borde-claro);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.liquid-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 
+    var(--vidrio-sombra-hover),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.liquid-card:hover::before {
+  opacity: 1;
+}
+
+/* ================= TEXTAREA LIQUID ================= */
+.textarea-liquid {
+  width: 100%;
+  min-height: 200px;
+  max-height: 300px;
+  background: var(--fondo-textarea);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  color: var(--texto-principal);
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.6;
+  padding: 20px;
+  resize: vertical;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.textarea-liquid:focus {
+  outline: none;
+  border-color: var(--acento-principal);
+  box-shadow: 
+    inset 0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 4px rgba(59, 130, 246, 0.2),
+    var(--acento-glow);
+  transform: scale(1.02);
+}
+
+.textarea-liquid::placeholder {
+  color: var(--texto-placeholder);
+}
+
+/* ================= CHAR COUNTER ================= */
+.char-counter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 24px;
+  padding: 12px 20px;
+  background: var(--fondo-control);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+  color: rgba(236, 245, 255, 0.9);
+}
+
+.char-limit {
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(74, 128, 255, 0.15));
+  border: 1px solid var(--acento-borde);
+}
+
+/* ================= LIQUID GLASS BUTTONS ================= */
+.btn-liquid {
+  flex: 1;
+  padding: 20px 16px;
+  border: none;
+  border-radius: 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  min-height: 68px;
+}
+
+.btn-liquid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  border-radius: inherit;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+.btn-liquid-primary {
+  background: rgba(30, 64, 175, 0.9);
+  border: 2px solid var(--acento-borde);
+  color: #ffffff;
+  box-shadow: 
+    var(--sombra-boton),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-liquid-primary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    var(--sombra-boton-hover),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-liquid-secondary {
+  background: rgba(45, 55, 75, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  color: var(--texto-secundario);
+}
+
+.btn-liquid:disabled {
+  opacity: 0.4;
+  transform: none !important;
+  cursor: not-allowed;
+}
+
+/* ================= CONTROLS ================= */
+.controls-liquid {
+  padding: 24px;
+}
+
+.control-group {
+  margin-bottom: 16px;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--texto-terciario);
+}
+
+.select-liquid {
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(10, 20, 45, 0.8);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  color: var(--texto-principal);
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.select-liquid:focus {
+  outline: none;
+  border-color: var(--acento-principal);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.radio-group {
+  display: flex;
+  gap: 12px;
+  color: var(--texto-terciario);
+}
+
+/* ================= STATUS ================= */
+.status-liquid {
+  padding: 20px;
+  background: var(--fondo-control);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 2px solid var(--acento-borde);
+  border-radius: 24px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 1.1rem;
+  transition: all 0.4s ease;
+  box-shadow: var(--vidrio-sombra);
+}
+
+.status-playing {
+  border-color: var(--oro-principal);
+  background: rgba(250, 204, 21, 0.1);
+  box-shadow: 0 0 40px var(--oro-glow);
+}
+
+/* ================= BUTTON GROUPS ================= */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.button-row {
+  display: flex;
+  gap: 16px;
+}
+
+/* ================= AUDIO PLAYER ================= */
+#audioPlayer audio {
+  width: 100%;
+  margin-top: 16px;
+}
+
+#audioPlayer button {
+  width: 100%;
+  margin-top: 12px;
+}
